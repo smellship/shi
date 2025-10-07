@@ -291,7 +291,7 @@ void runInvertedPendulum(){
 	float inputs[2];  //Yamakawa
 
 
-	float const h = 0.00025; //进一步减小时间增量以提高精度
+	float const h = 0.002; //time increment
 
 	float externalForce=0.0;
 	
@@ -306,9 +306,10 @@ void runInvertedPendulum(){
 	Rod rod(1.0, worldBoundary.y2 + 0.125 + 0.35);
 	
 	//---------------------------------------------------------------
-    //***************************************************************    //设置杆子相对于垂直方向的初始角度
+    //***************************************************************
+    //Set the initial angle of the pole with respect to the vertical
     prevState.x = 1.0;
-	prevState.angle = 25.0 * (3.14159/180);  //初始角度 = 25度
+	prevState.angle = 25.0 * (3.14/180);  //initial angle  = 35 degrees
 	
 	
     initFuzzySystem(&g_fuzzy_system);	
@@ -318,7 +319,7 @@ void runInvertedPendulum(){
 	
     string msg;
 
-    int frames=1;//减少帧数以提高仿真速度
+    int frames=2;//10; //display only EVERY nth frame
     float input_angle=0;
 
     bool quit = false;
@@ -329,7 +330,7 @@ void runInvertedPendulum(){
             prevState.init();
         	prevState.x = 1.0;
 
-		    cout << "输入初始角度 [-60, 60]，留空则退出: ";
+		    cout << "Enter initial angle [-60, 60], (to exit, leave it blank): ";
 		    
 
 		    input_angle=-90;
@@ -346,17 +347,17 @@ void runInvertedPendulum(){
 		    	quit = true;
 		    }
 
-		    if(input_angle == 0.0){ //如果初始角度设为0，则扰动0.1度
-		    	input_angle = 0.1 * (3.14159/180); 
+		    if(input_angle == 0.0){ //perturb by 0.1 degrees if initial angle is set to 0
+		    	input_angle = 0.1 * (3.14/180); 
 		    } else {
-		    	input_angle = input_angle * (3.14159/180);
+		    	input_angle = input_angle * (3.14/180);
 		    }
 
 
-		    prevState.angle = input_angle; //用户输入
+		    prevState.angle = input_angle; //user input
 
 		    //--------------------------
-		    //稳定性检查
+		    //STABILITY CHECK
 
 		    int tmpIterations=0;
 		    float tmpPrevAngle=0;
@@ -552,16 +553,16 @@ void runInvertedPendulum(){
 	}
 		
     //2) Enable this only after your fuzzy system has been completed already.
-	free_fuzzy_rules(&g_fuzzy_system);
+	//free_fuzzy_rules(&g_fuzzy_system);
 }
 
 
 void generateControlSurface_Angle_vs_Angle_Dot(){	
 	float inputs[2]; //Yamakawa
 
-	cout << "正在生成控制曲面 (角度 vs 角速度)..." << endl;
+	cout << "Generating control surface (Angle vs. Angle_Dot)..." << endl;
 	WorldStateType prevState, newState;
-	srand(time(NULL));  // 初始化随机数生成器
+	srand(time(NULL));  // Seed the random number generator
 			
     initPendulumWorld();
 	
@@ -602,8 +603,8 @@ void generateControlSurface_Angle_vs_Angle_Dot(){
     angle_dot_increment=(maxAngleDot-minAngleDot)/float(NUM_OF_DATA_POINTS);
     angle_dot=minAngleDot;
 //---------------------------------
-    minAngle=(-40.0)*3.14159/180.0;
-    maxAngle=(40.0)*3.14159/180.0;
+    minAngle=(-40.0)*3.14/180.0;
+    maxAngle=(40.0)*3.14/180.0;
     angle_increment=(maxAngle-minAngle)/float(NUM_OF_DATA_POINTS);   
 
 //---------------------------------
@@ -629,25 +630,25 @@ void generateControlSurface_Angle_vs_Angle_Dot(){
 			 inputs[INPUT_X] = (coefficient_A * prevState.angle) + (coefficient_B * prevState.angle_dot);
 			 inputs[INPUT_Y] = (coefficient_C * prevState.x) + (coefficient_D * prevState.x_dot);
 			
-	         prevState.F = 0.0;  //无操作
+	         prevState.F = 0.0;  //nothing is done.//fuzzy_system(inputs, g_fuzzy_system);
 			
 			
 			 //---------------------------------------------------------------------------
-			 //计算世界的新状态
-			 //更新角度
+			 //Calculate the new state of the world
+			 //Updating angle
 			 
 			 newState.angle_double_dot = calc_angular_acceleration(prevState);
 			 newState.angle_dot = prevState.angle_dot + (h * newState.angle_double_dot); 
 			 newState.angle = prevState.angle + (h * newState.angle_dot);
 			 newState.F = prevState.F;
 			
-			 //更新x
+			 //Updating x
 					 
 			 newState.x_double_dot = calc_horizontal_acceleration(prevState); 
 			 newState.x_dot = prevState.x_dot + (h * newState.x_double_dot);
 	         newState.x = prevState.x + (h * newState.x_dot);
 
-	//更新前一状态
+	//Update previous state
 			 prevState.x = newState.x;		
 	 		 prevState.angle = newState.angle;
 			 prevState.x_dot = newState.x_dot;
@@ -660,16 +661,16 @@ void generateControlSurface_Angle_vs_Angle_Dot(){
 			 inputs[INPUT_Y] = (coefficient_C * prevState.x) + (coefficient_D * prevState.x_dot);
 			
 	         prevState.F = fuzzy_system(inputs, g_fuzzy_system);
-			 dataSet.z[row][col] = prevState.F; //记录计算出的力
+			 dataSet.z[row][col] = prevState.F; //record Force calculated
 			 
-	//设置下一个案例; 增量数据点		 
+	//Set next case to examine; increment data points		 
           angle = angle + angle_increment;    
       }
       angle_dot = angle_dot + angle_dot_increment;		 
    }	
    
    free_fuzzy_rules(&g_fuzzy_system);
-   cout << "数据收集完成." << endl;
+   cout << "done collecting data." << endl;
 
 }
 

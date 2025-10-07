@@ -5,209 +5,115 @@
 
 //Initialise Fuzzy Rules
 
-//Initialise Fuzzy Rules
-
-//Initialise Fuzzy Rules
-
-//Initialise Fuzzy Rules
-
 void initFuzzyRules(fuzzy_system_rec *fl) {
 	
-   /* 优化的25条模糊规则，以提高稳定性 */
+   // 规则总数设置为 25 (5x5 矩阵)
+   const int no_of_combined_rules = 25;
+   int i;
+	
+//---------------------------------------------------------------------------- 	
+// X vs. Y (Combined Inputs)
+//
+   for (i = 0;i < no_of_combined_rules;i++) {
+       fl->rules[i].inp_index[0] = INPUT_X; // X 组合输入
+       fl->rules[i].inp_index[1] = INPUT_Y; // Y 组合输入
+   }
+      
+   /* 规则矩阵 (X \ Y): NL, NS, ZE, PS, PL */
+   /* 输出: NVL, NL, NM, NS, ZE, PS, PM, PL, PVL */
    
-   // Rule 1: IF X is NL AND Y is NL THEN Force is PL
-   fl->rules[0].inp_index[0] = INPUT_X;
-   fl->rules[0].inp_index[1] = INPUT_Y;
-   fl->rules[0].inp_fuzzy_set[0] = in_nl;
-   fl->rules[0].inp_fuzzy_set[1] = in_nl;
-   fl->rules[0].out_fuzzy_set = out_pl;
+   // 这里采用一个常见的倒立摆模糊控制规则矩阵作为示例起点。
+   // 你应该参考 Yamakawa 的论文（或实验）来定义你的规则。
+   
+   // 规则索引 (i) 从 0 到 24 
+   
+   // 假设规则矩阵 (X \ Y) 的布局是：
+   // X 是行 (i=0..4)，Y 是列 (j=0..4)
+   // i = 5*row + col
+   
+   // R1: X=NL
+   //     Y: NL, NS, ZE, PS, PL
+   fl->rules[0].inp_fuzzy_set[0] = in_nl; fl->rules[0].inp_fuzzy_set[1] = in_nl; fl->rules[0].out_fuzzy_set = out_pm; // Y=NL (抵消最少) -> PM (+6.0)
+   fl->rules[1].inp_fuzzy_set[0] = in_nl; fl->rules[1].inp_fuzzy_set[1] = in_ns; fl->rules[1].out_fuzzy_set = out_pl; // Y=NS (较少抵消) -> PL (+10.0)
+   fl->rules[2].inp_fuzzy_set[0] = in_nl; fl->rules[2].inp_fuzzy_set[1] = in_ze; fl->rules[2].out_fuzzy_set = out_pvl; // Y=ZE (无抵消) -> PVL (+15.0)
+   fl->rules[3].inp_fuzzy_set[0] = in_nl; fl->rules[3].inp_fuzzy_set[1] = in_ps; fl->rules[3].out_fuzzy_set = out_pl; // Y=PS (较多抵消) -> PL (+10.0)
+   fl->rules[4].inp_fuzzy_set[0] = in_nl; fl->rules[4].inp_fuzzy_set[1] = in_pl; fl->rules[4].out_fuzzy_set = out_pm; // Y=PL (最多抵消) -> PM (+6.0)
 
-   // Rule 2: IF X is NL AND Y is NS THEN Force is PL
-   fl->rules[1].inp_index[0] = INPUT_X;
-   fl->rules[1].inp_index[1] = INPUT_Y;
-   fl->rules[1].inp_fuzzy_set[0] = in_nl;
-   fl->rules[1].inp_fuzzy_set[1] = in_ns;
-   fl->rules[1].out_fuzzy_set = out_pl;
+  
+   
+   // R2: X=NS
+   //     Y: NL, NS, ZE, PS, PL
+   fl->rules[5].inp_fuzzy_set[0] = in_ns; fl->rules[5].inp_fuzzy_set[1] = in_nl; fl->rules[5].out_fuzzy_set = out_ze; // 1,0 -> ZE
+   fl->rules[6].inp_fuzzy_set[0] = in_ns; fl->rules[6].inp_fuzzy_set[1] = in_ns; fl->rules[6].out_fuzzy_set = out_nm; // 1,1 -> NM
+   fl->rules[7].inp_fuzzy_set[0] = in_ns; fl->rules[7].inp_fuzzy_set[1] = in_ze; fl->rules[7].out_fuzzy_set = out_nl; // 1,2 -> NL
+   fl->rules[8].inp_fuzzy_set[0] = in_ns; fl->rules[8].inp_fuzzy_set[1] = in_ps; fl->rules[8].out_fuzzy_set = out_nm; // 1,3 -> NM
+   fl->rules[9].inp_fuzzy_set[0] = in_ns; fl->rules[9].inp_fuzzy_set[1] = in_pl; fl->rules[9].out_fuzzy_set = out_ze; // 1,4 -> ZE
 
-   // Rule 3: IF X is NL AND Y is ZE THEN Force is PM
-   fl->rules[2].inp_index[0] = INPUT_X;
-   fl->rules[2].inp_index[1] = INPUT_Y;
-   fl->rules[2].inp_fuzzy_set[0] = in_nl;
-   fl->rules[2].inp_fuzzy_set[1] = in_ze;
-   fl->rules[2].out_fuzzy_set = out_pm;
+   // R3: X=ZE
+   //     Y: NL, NS, ZE, PS, PL
+   fl->rules[10].out_fuzzy_set = out_pvl; // Y=NL, F=+15.0
+   fl->rules[11].out_fuzzy_set = out_pl;  // Y=NS, F=+10.0
+   fl->rules[12].out_fuzzy_set = out_ze;  // Y=ZE, F=0.0
+   fl->rules[13].out_fuzzy_set = out_nl;  // Y=PS, F=-10.0
+   fl->rules[14].out_fuzzy_set = out_nvl; // Y=PL, F=-15.0```
 
-   // Rule 4: IF X is NL AND Y is PS THEN Force is PS
-   fl->rules[3].inp_index[0] = INPUT_X;
-   fl->rules[3].inp_index[1] = INPUT_Y;
-   fl->rules[3].inp_fuzzy_set[0] = in_nl;
-   fl->rules[3].inp_fuzzy_set[1] = in_ps;
-   fl->rules[3].out_fuzzy_set = out_ps;
+   // R4: X=PS
+   //     Y: NL, NS, ZE, PS, PL
+   fl->rules[15].inp_fuzzy_set[0] = in_ps; fl->rules[15].inp_fuzzy_set[1] = in_nl; fl->rules[15].out_fuzzy_set = out_ze; // 3,0 -> ZE
+   fl->rules[16].inp_fuzzy_set[0] = in_ps; fl->rules[16].inp_fuzzy_set[1] = in_ns; fl->rules[16].out_fuzzy_set = out_pm; // 3,1 -> PM
+   fl->rules[17].inp_fuzzy_set[0] = in_ps; fl->rules[17].inp_fuzzy_set[1] = in_ze; fl->rules[17].out_fuzzy_set = out_pl; // 3,2 -> PL
+   fl->rules[18].inp_fuzzy_set[0] = in_ps; fl->rules[18].inp_fuzzy_set[1] = in_ps; fl->rules[18].out_fuzzy_set = out_pm; // 3,3 -> PM
+   fl->rules[19].inp_fuzzy_set[0] = in_ps; fl->rules[19].inp_fuzzy_set[1] = in_pl; fl->rules[19].out_fuzzy_set = out_ze; // 3,4 -> ZE
 
-   // Rule 5: IF X is NL AND Y is PL THEN Force is ZE
-   fl->rules[4].inp_index[0] = INPUT_X;
-   fl->rules[4].inp_index[1] = INPUT_Y;
-   fl->rules[4].inp_fuzzy_set[0] = in_nl;
-   fl->rules[4].inp_fuzzy_set[1] = in_pl;
-   fl->rules[4].out_fuzzy_set = out_ze;
-
-   // Rule 6: IF X is NS AND Y is NL THEN Force is PL
-   fl->rules[5].inp_index[0] = INPUT_X;
-   fl->rules[5].inp_index[1] = INPUT_Y;
-   fl->rules[5].inp_fuzzy_set[0] = in_ns;
-   fl->rules[5].inp_fuzzy_set[1] = in_nl;
-   fl->rules[5].out_fuzzy_set = out_pl;
-
-   // Rule 7: IF X is NS AND Y is NS THEN Force is PM
-   fl->rules[6].inp_index[0] = INPUT_X;
-   fl->rules[6].inp_index[1] = INPUT_Y;
-   fl->rules[6].inp_fuzzy_set[0] = in_ns;
-   fl->rules[6].inp_fuzzy_set[1] = in_ns;
-   fl->rules[6].out_fuzzy_set = out_pm;
-
-   // Rule 8: IF X is NS AND Y is ZE THEN Force is PS
-   fl->rules[7].inp_index[0] = INPUT_X;
-   fl->rules[7].inp_index[1] = INPUT_Y;
-   fl->rules[7].inp_fuzzy_set[0] = in_ns;
-   fl->rules[7].inp_fuzzy_set[1] = in_ze;
-   fl->rules[7].out_fuzzy_set = out_ps;
-
-   // Rule 9: IF X is NS AND Y is PS THEN Force is ZE
-   fl->rules[8].inp_index[0] = INPUT_X;
-   fl->rules[8].inp_index[1] = INPUT_Y;
-   fl->rules[8].inp_fuzzy_set[0] = in_ns;
-   fl->rules[8].inp_fuzzy_set[1] = in_ps;
-   fl->rules[8].out_fuzzy_set = out_ze;
-
-   // Rule 10: IF X is NS AND Y is PL THEN Force is NS
-   fl->rules[9].inp_index[0] = INPUT_X;
-   fl->rules[9].inp_index[1] = INPUT_Y;
-   fl->rules[9].inp_fuzzy_set[0] = in_ns;
-   fl->rules[9].inp_fuzzy_set[1] = in_pl;
-   fl->rules[9].out_fuzzy_set = out_ns;
-
-   // Rule 11: IF X is ZE AND Y is NL THEN Force is PM
-   fl->rules[10].inp_index[0] = INPUT_X;
-   fl->rules[10].inp_index[1] = INPUT_Y;
-   fl->rules[10].inp_fuzzy_set[0] = in_ze;
-   fl->rules[10].inp_fuzzy_set[1] = in_nl;
-   fl->rules[10].out_fuzzy_set = out_pm;
-
-   // Rule 12: IF X is ZE AND Y is NS THEN Force is PS
-   fl->rules[11].inp_index[0] = INPUT_X;
-   fl->rules[11].inp_index[1] = INPUT_Y;
-   fl->rules[11].inp_fuzzy_set[0] = in_ze;
-   fl->rules[11].inp_fuzzy_set[1] = in_ns;
-   fl->rules[11].out_fuzzy_set = out_ps;
-
-   // Rule 13: IF X is ZE AND Y is ZE THEN Force is ZE
-   fl->rules[12].inp_index[0] = INPUT_X;
-   fl->rules[12].inp_index[1] = INPUT_Y;
-   fl->rules[12].inp_fuzzy_set[0] = in_ze;
-   fl->rules[12].inp_fuzzy_set[1] = in_ze;
-   fl->rules[12].out_fuzzy_set = out_ze;
-
-   // Rule 14: IF X is ZE AND Y is PS THEN Force is NS
-   fl->rules[13].inp_index[0] = INPUT_X;
-   fl->rules[13].inp_index[1] = INPUT_Y;
-   fl->rules[13].inp_fuzzy_set[0] = in_ze;
-   fl->rules[13].inp_fuzzy_set[1] = in_ps;
-   fl->rules[13].out_fuzzy_set = out_ns;
-
-   // Rule 15: IF X is ZE AND Y is PL THEN Force is NM
-   fl->rules[14].inp_index[0] = INPUT_X;
-   fl->rules[14].inp_index[1] = INPUT_Y;
-   fl->rules[14].inp_fuzzy_set[0] = in_ze;
-   fl->rules[14].inp_fuzzy_set[1] = in_pl;
-   fl->rules[14].out_fuzzy_set = out_nm;
-
-   // Rule 16: IF X is PS AND Y is NL THEN Force is PS
-   fl->rules[15].inp_index[0] = INPUT_X;
-   fl->rules[15].inp_index[1] = INPUT_Y;
-   fl->rules[15].inp_fuzzy_set[0] = in_ps;
-   fl->rules[15].inp_fuzzy_set[1] = in_nl;
-   fl->rules[15].out_fuzzy_set = out_ps;
-
-   // Rule 17: IF X is PS AND Y is NS THEN Force is ZE
-   fl->rules[16].inp_index[0] = INPUT_X;
-   fl->rules[16].inp_index[1] = INPUT_Y;
-   fl->rules[16].inp_fuzzy_set[0] = in_ps;
-   fl->rules[16].inp_fuzzy_set[1] = in_ns;
-   fl->rules[16].out_fuzzy_set = out_ze;
-
-   // Rule 18: IF X is PS AND Y is ZE THEN Force is NS
-   fl->rules[17].inp_index[0] = INPUT_X;
-   fl->rules[17].inp_index[1] = INPUT_Y;
-   fl->rules[17].inp_fuzzy_set[0] = in_ps;
-   fl->rules[17].inp_fuzzy_set[1] = in_ze;
-   fl->rules[17].out_fuzzy_set = out_ns;
-
-   // Rule 19: IF X is PS AND Y is PS THEN Force is NM
-   fl->rules[18].inp_index[0] = INPUT_X;
-   fl->rules[18].inp_index[1] = INPUT_Y;
-   fl->rules[18].inp_fuzzy_set[0] = in_ps;
-   fl->rules[18].inp_fuzzy_set[1] = in_ps;
-   fl->rules[18].out_fuzzy_set = out_nm;
-
-   // Rule 20: IF X is PS AND Y is PL THEN Force is NL
-   fl->rules[19].inp_index[0] = INPUT_X;
-   fl->rules[19].inp_index[1] = INPUT_Y;
-   fl->rules[19].inp_fuzzy_set[0] = in_ps;
-   fl->rules[19].inp_fuzzy_set[1] = in_pl;
-   fl->rules[19].out_fuzzy_set = out_nl;
-
-   // Rule 21: IF X is PL AND Y is NL THEN Force is ZE
-   fl->rules[20].inp_index[0] = INPUT_X;
-   fl->rules[20].inp_index[1] = INPUT_Y;
-   fl->rules[20].inp_fuzzy_set[0] = in_pl;
-   fl->rules[20].inp_fuzzy_set[1] = in_nl;
-   fl->rules[20].out_fuzzy_set = out_ze;
-
-   // Rule 22: IF X is PL AND Y is NS THEN Force is NS
-   fl->rules[21].inp_index[0] = INPUT_X;
-   fl->rules[21].inp_index[1] = INPUT_Y;
-   fl->rules[21].inp_fuzzy_set[0] = in_pl;
-   fl->rules[21].inp_fuzzy_set[1] = in_ns;
-   fl->rules[21].out_fuzzy_set = out_ns;
-
-   // Rule 23: IF X is PL AND Y is ZE THEN Force is NM
-   fl->rules[22].inp_index[0] = INPUT_X;
-   fl->rules[22].inp_index[1] = INPUT_Y;
-   fl->rules[22].inp_fuzzy_set[0] = in_pl;
-   fl->rules[22].inp_fuzzy_set[1] = in_ze;
-   fl->rules[22].out_fuzzy_set = out_nm;
-
-   // Rule 24: IF X is PL AND Y is PS THEN Force is NL
-   fl->rules[23].inp_index[0] = INPUT_X;
-   fl->rules[23].inp_index[1] = INPUT_Y;
-   fl->rules[23].inp_fuzzy_set[0] = in_pl;
-   fl->rules[23].inp_fuzzy_set[1] = in_ps;
-   fl->rules[23].out_fuzzy_set = out_nl;
-
-   // Rule 25: IF X is PL AND Y is PL THEN Force is NL
-   fl->rules[24].inp_index[0] = INPUT_X;
-   fl->rules[24].inp_index[1] = INPUT_Y;
-   fl->rules[24].inp_fuzzy_set[0] = in_pl;
-   fl->rules[24].inp_fuzzy_set[1] = in_pl;
-   fl->rules[24].out_fuzzy_set = out_nl;
-
-   return;
+   // R5: X=PL
+   //     Y: NL, NS, ZE, PS, PL
+   fl->rules[20].inp_fuzzy_set[0] = in_pl; fl->rules[20].inp_fuzzy_set[1] = in_nl; fl->rules[20].out_fuzzy_set = out_nm; // 4,0 -> NM (-6.0)
+   fl->rules[21].inp_fuzzy_set[0] = in_pl; fl->rules[21].inp_fuzzy_set[1] = in_ns; fl->rules[21].out_fuzzy_set = out_nl; // 4,1 -> NL (-10.0)
+   fl->rules[22].inp_fuzzy_set[0] = in_pl; fl->rules[22].inp_fuzzy_set[1] = in_ze; fl->rules[22].out_fuzzy_set = out_nvl; // 4,2 -> NVL (-15.0)
+   fl->rules[23].inp_fuzzy_set[0] = in_pl; fl->rules[23].inp_fuzzy_set[1] = in_ps; fl->rules[23].out_fuzzy_set = out_nl; // 4,3 -> NL (-10.0)
+   fl->rules[24].inp_fuzzy_set[0] = in_pl; fl->rules[24].inp_fuzzy_set[1] = in_pl; fl->rules[24].out_fuzzy_set = out_nm; // 4,4 -> NM (-6.0)
+      return;
 }
+
+
 void initMembershipFunctions(fuzzy_system_rec *fl) {
 	
-   /* The X membership functions - 进一步优化以提高响应精度 */
-   fl->inp_mem_fns[INPUT_X][in_nl] = init_trapz (-4.0,-3.0,-2.0,-1.0,left_trapezoid);
-   fl->inp_mem_fns[INPUT_X][in_ns] = init_trapz (-2.0,-1.0,-0.2,0.0,regular_trapezoid);
-   fl->inp_mem_fns[INPUT_X][in_ze] = init_trapz (-0.2,-0.05,0.05,0.2,regular_trapezoid);
-   fl->inp_mem_fns[INPUT_X][in_ps] = init_trapz (0.0,0.2,1.0,2.0,regular_trapezoid);
-   fl->inp_mem_fns[INPUT_X][in_pl] = init_trapz (1.0,2.0,3.0,4.0,right_trapezoid);
+      /* The Combined Input X membership functions (e.g. [-4.0, 4.0]) */
+   // 假设使用五个模糊集: 负大(NL), 负小(NS), 零(ZE), 正小(PS), 正大(PL)
+   fl->inp_mem_fns[INPUT_X][in_nl] = init_trapz (-20.0, -15.0, 0.0, 0.0, left_trapezoid);
+   
+   // NS (对称于 PS)
+   fl->inp_mem_fns[INPUT_X][in_ns] = init_trapz (-15.0, -5.0, -1.0, 0.0, regular_trapezoid); 
+   
+   // ZE
+   fl->inp_mem_fns[INPUT_X][in_ze] = init_trapz (-1.5, -0.5, 0.5, 1.5, regular_trapezoid); // 平顶 [-0.5, 0.5]
+   
+   // PS (对称于 NS)
+   fl->inp_mem_fns[INPUT_X][in_ps] = init_trapz (0.0, 1.0, 5.0, 15.0, regular_trapezoid); 
+   
+   // PL
+   fl->inp_mem_fns[INPUT_X][in_pl] = init_trapz (15.0, 20.0, 0.0, 0.0, right_trapezoid);
 
-   /* The Y membership functions - 进一步优化以提高响应精度 */
-   fl->inp_mem_fns[INPUT_Y][in_nl] = init_trapz (-4.0,-3.0,-2.0,-1.0,left_trapezoid);
-   fl->inp_mem_fns[INPUT_Y][in_ns] = init_trapz (-2.0,-1.0,-0.2,0.0,regular_trapezoid);
-   fl->inp_mem_fns[INPUT_Y][in_ze] = init_trapz (-0.2,-0.05,0.05,0.2,regular_trapezoid);
-   fl->inp_mem_fns[INPUT_Y][in_ps] = init_trapz (0.0,0.2,1.0,2.0,regular_trapezoid);
-   fl->inp_mem_fns[INPUT_Y][in_pl] = init_trapz (1.0,2.0,3.0,4.0,right_trapezoid);
-
+   /* The Combined Input Y membership functions (e.g. [-4.0, 4.0]) */
+   // Y 的模糊集定义可以与 X 相同，作为起始点
+   
+   // NL (Negative Large) - 左梯形
+   fl->inp_mem_fns[INPUT_Y][in_nl] = init_trapz (-30.0, -18.0, 0.0, 0.0, left_trapezoid);
+   
+   // NS (Negative Small) - 确保 d 覆盖 ZE 的外部边界 a
+   // NS 应该在 -4.0 处结束，与 ZE 的 -4.0 完美衔接
+   fl->inp_mem_fns[INPUT_Y][in_ns] = init_trapz (-18.0, -6.0, -4.0, 0.0, regular_trapezoid); 
+   
+   // ZE (Zero) - 扩大外部边界到 4.0，平顶保持 [-0.5, 0.5]
+   fl->inp_mem_fns[INPUT_Y][in_ze] = init_trapz (-4.0, -1.0, 1.0, 4.0, regular_trapezoid); 
+   
+   // PS (Positive Small) - 确保 a 覆盖 ZE 的外部边界 d
+   // PS 应该在 4.0 处开始
+   fl->inp_mem_fns[INPUT_Y][in_ps] = init_trapz (0.0, 4.0, 6.0, 18.0, regular_trapezoid); // 从 0.0 开始斜坡，在 4.0 处达到 1.0
+   
+   // PL (Positive Large) - 右梯形
+   fl->inp_mem_fns[INPUT_Y][in_pl] = init_trapz (18.0, 30.0, 0.0, 0.0, right_trapezoid);
+	
    return;
 }
 
@@ -219,27 +125,27 @@ void initFuzzySystem (fuzzy_system_rec *fl) {
    fl->no_of_inp_regions = 5;
    fl->no_of_outputs = 9;
 	
-   // 进一步优化系数以获得更好的稳定性
-   coefficient_A = 5;   // 增加角度影响权重
-   coefficient_B = 0.03;  // 减小角速度影响权重
-   coefficient_C = 0.5;   // 增加位置影响权重
-   coefficient_D = 0.01;  // 减小速度影响权重
+   coefficient_A=50.0;   // 角度权重
+   coefficient_B=10.0;   // 角速度权重   
+   
+   coefficient_C=20;   // 保持不变（你成功的归位牵引力）
+   coefficient_D=80;   // 提高阻尼力 (从 2.0 提高到 10.0)
 	
-   // 调整输出值，使控制更加平滑和精确
-   fl->output_values[out_nvl] = -30.0;   // 减小最大输出力
-   fl->output_values[out_nl]  = -20.0;
-   fl->output_values[out_nm]  = -10.0;
-   fl->output_values[out_ns]  = -3.0;
-   fl->output_values[out_ze]  = 0.0;
-   fl->output_values[out_ps]  = 3.0;
-   fl->output_values[out_pm]  = 10.0;
-   fl->output_values[out_pl]  = 20.0;
-   fl->output_values[out_pvl] = 40.0;
+	// **修改这里：定义规则输出常数 (力的值)**
+   fl->output_values [out_nvl]=-15.0; 
+	fl->output_values [out_nl] = -10.0; // 较小的 NL
+	fl->output_values [out_nm] = -6.0;  
+	fl->output_values [out_ns] = -2.0;  // 微小的 NS
+	fl->output_values [out_ze] = 0.0;   
+	fl->output_values [out_ps] = 2.0;   
+	fl->output_values [out_pm] = 6.0;   
+	fl->output_values [out_pl] = 10.0;  
+	fl->output_values [out_pvl]= 15.0;
+   
 
    fl->rules = (rule *) malloc ((size_t)(fl->no_of_rules*sizeof(rule)));
    initFuzzyRules(fl);
    initMembershipFunctions(fl);
-   fl->allocated = true;
    return;
 }
 
@@ -369,3 +275,4 @@ void free_fuzzy_rules (fuzzy_system_rec *fz) {
    fz->allocated = false;
    return;
 }
+
